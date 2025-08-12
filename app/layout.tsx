@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Shiny Guacamole",
-  description: "A Next.js 14 TypeScript application with Tailwind CSS",
+  description: "A Next.js 14 TypeScript Mobile website with Tailwind CSS",
 };
 
 export default function RootLayout({
