@@ -25,7 +25,7 @@ npm run dev
 
 ## 🛠 Tech Stack
 
-- **Framework:** Next.js 15
+- **Framework:** Next.js 14
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Database:** Supabase (PostgreSQL)
@@ -45,29 +45,29 @@ npm run dev
 
 ### Setup Steps
 
-1. **Clone and install:**
+1. Clone and install:
 ```bash
 git clone https://github.com/cqrtechciara/shiny-guacamole.git
 cd shiny-guacamole
 npm install
 ```
 
-2. **Environment setup:**
-   - Copy `.env.example` to `.env.local`
+2. Environment setup:
+   - Copy .env.example to .env.local
    - Fill in your Supabase credentials
 
-3. **Database setup:**
+3. Database setup:
    - Run Supabase migrations
    - Seed the database (optional)
 
-4. **Start development:**
+4. Start development:
 ```bash
 npm run dev
 ```
 
 ## 🔐 Environment Variables
 
-Create a `.env.local` file in the root directory with the following variables:
+Create a .env.local file in the root directory with the following variables:
 
 ```env
 # Supabase Configuration
@@ -119,13 +119,12 @@ vercel
 ### Production Environment Variables
 
 Make sure to set these in your Vercel project settings:
-
-• NEXT_PUBLIC_SUPABASE_URL
-• NEXT_PUBLIC_SUPABASE_ANON_KEY
-• SUPABASE_SERVICE_ROLE_KEY
-• DATABASE_URL
-• NEXTAUTH_URL (your production URL)
-• NEXTAUTH_SECRET
+- NEXT_PUBLIC_SUPABASE_URL
+- NEXT_PUBLIC_SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- DATABASE_URL
+- NEXTAUTH_URL (your production URL)
+- NEXTAUTH_SECRET
 
 ## 🗄️ Supabase Migration Instructions
 
@@ -165,7 +164,7 @@ supabase db reset
 supabase migration new your_migration_name
 ```
 
-2. Edit the migration file in supabase/migrations/
+2. Edit the migration file in `supabase/migrations/`
 
 3. Apply the migration:
 ```bash
@@ -191,7 +190,7 @@ supabase gen types typescript --local > types/supabase.ts
 supabase db seed
 ```
 
-2. Custom seed files are located in supabase/seed.sql
+2. Custom seed files are located in `supabase/seed.sql`
 
 ## 📁 Project Structure
 
