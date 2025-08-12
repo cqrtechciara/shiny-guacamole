@@ -6,7 +6,7 @@ export default function Home() {
           Welcome to Shiny Guacamole! 🥑
         </h1>
         <p className="text-sm text-center sm:text-left text-gray-600 dark:text-gray-400 max-w-2xl">
-          A Next.js 14 TypeScript application with Tailwind CSS, ready for development.
+          A Next.js 14 TypeScript mobile-enhanced website with Tailwind CSS, ready for development.
         </p>
         <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
           <li className="mb-2">
@@ -16,9 +16,10 @@ export default function Home() {
             </code>
             .
           </li>
-          <li>Save and see your changes instantly.</li>
+          <li>
+            Save and see your changes instantly.
+          </li>
         </ol>
-
         <div className="flex gap-4 items-center flex-col sm:flex-row">
           <a
             className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
