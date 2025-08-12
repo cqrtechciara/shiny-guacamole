@@ -1,8 +1,7 @@
 # Shiny Guacamole
+A responsive mobile-enhanced website built with Next.js and Supabase integration for the c.qr tech pilot project.
 
-A Next.js application with Supabase integration for the c.qr tech pilot project.
-
-## 🚀 Quickstart
+## 🚀 Quick Development Setup
 
 1. Clone the repository:
 ```bash
@@ -31,13 +30,15 @@ npm run dev
 - **Styling:** Tailwind CSS
 - **Database:** Supabase (PostgreSQL)
 - **Authentication:** Supabase Auth
-- **Deployment:** Vercel
+- **Deployment:** Vercel (Production)
 - **Package Manager:** npm
+- **Type:** Responsive Mobile-Enhanced Website
 
 ## 💻 Local Development
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - npm
 - Git
 - Supabase account
@@ -68,7 +69,7 @@ npm run dev
 
 Create a `.env.local` file in the root directory with the following variables:
 
-```env
+```bash
 # Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
@@ -87,107 +88,110 @@ NODE_ENV=development
 
 ## 🚢 Deploy to Vercel
 
+This mobile-enhanced website is designed to be deployed on Vercel for optimal performance and scalability.
+
 ### One-Click Deploy
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/cqrtechciara/shiny-guacamole)
 
 ### Manual Deployment
 
-1. **Install Vercel CLI:**
+1. Install Vercel CLI:
 ```bash
 npm i -g vercel
 ```
 
-2. **Login to Vercel:**
+2. Login to Vercel:
 ```bash
 vercel login
 ```
 
-3. **Deploy:**
+3. Deploy:
 ```bash
 vercel
 ```
 
-4. **Set environment variables in Vercel dashboard:**
+4. Set environment variables in Vercel dashboard:
    - Go to your project settings
-   - Add all environment variables from `.env.local`
+   - Add all environment variables from .env.local
    - Redeploy if necessary
 
 ### Production Environment Variables
 
 Make sure to set these in your Vercel project settings:
-- `NEXT_PUBLIC_SUPABASE_URL`
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `DATABASE_URL`
-- `NEXTAUTH_URL` (your production URL)
-- `NEXTAUTH_SECRET`
+
+• NEXT_PUBLIC_SUPABASE_URL 
+• NEXT_PUBLIC_SUPABASE_ANON_KEY 
+• SUPABASE_SERVICE_ROLE_KEY 
+• DATABASE_URL 
+• NEXTAUTH_URL (your production URL) 
+• NEXTAUTH_SECRET
 
 ## 🗄️ Supabase Migration Instructions
 
 ### Initial Setup
 
-1. **Install Supabase CLI:**
+1. Install Supabase CLI:
 ```bash
 npm install -g supabase
 ```
 
-2. **Login to Supabase:**
+2. Login to Supabase:
 ```bash
 supabase login
 ```
 
-3. **Link your project:**
+3. Link your project:
 ```bash
 supabase link --project-ref your-project-ref
 ```
 
 ### Running Migrations
 
-1. **Apply existing migrations:**
+1. Apply existing migrations:
 ```bash
 supabase db push
 ```
 
-2. **Reset database (development only):**
+2. Reset database (development only):
 ```bash
 supabase db reset
 ```
 
 ### Creating New Migrations
 
-1. **Generate a new migration:**
+1. Generate a new migration:
 ```bash
 supabase migration new your_migration_name
 ```
 
-2. **Edit the migration file in `supabase/migrations/`**
+2. Edit the migration file in supabase/migrations/
 
-3. **Apply the migration:**
+3. Apply the migration:
 ```bash
 supabase db push
 ```
 
 ### Database Schema Management
 
-1. **Pull schema changes from remote:**
+1. Pull schema changes from remote:
 ```bash
 supabase db pull
 ```
 
-2. **Generate types (TypeScript):**
+2. Generate types (TypeScript):
 ```bash
 supabase gen types typescript --local > types/supabase.ts
 ```
 
 ### Seeding Data
 
-1. **Run seed script:**
+1. Run seed script:
 ```bash
 supabase db seed
 ```
 
-2. **Custom seed files are located in `supabase/seed.sql`**
+2. Custom seed files are located in supabase/seed.sql
 
 ## 📁 Project Structure
 
@@ -222,4 +226,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**c.qr tech pilot project** - Built with ❤️ using Next.js and Supabase
+c.qr tech pilot project - A responsive mobile-enhanced website built with ❤️ using Next.js and Supabase
