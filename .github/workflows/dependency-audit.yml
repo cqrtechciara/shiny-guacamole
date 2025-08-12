@@ -1,0 +1,187 @@
+name: Dependency Security Audit
+
+on:
+  schedule:
+    # Run weekly on Mondays at 8 AM UTC
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'yarn.lock'
+
+jobs:
+  security-audit:
+    name: Security Audit and Vulnerability Assessment
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run npm audit
+        id: npm-audit
+        run: |
+          echo "Running npm audit..."
+          npm audit --audit-level=moderate --json > audit-results.json || true
+          npm audit --audit-level=moderate > audit-summary.txt || true
+          echo "audit-results<<EOF" >> $GITHUB_OUTPUT
+          cat audit-summary.txt >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Check for vulnerabilities
+        id: check-vulns
+        run: |
+          if [ -s audit-results.json ]; then
+            VULN_COUNT=$(cat audit-results.json | jq -r '.metadata.vulnerabilities.total // 0')
+            HIGH_COUNT=$(cat audit-results.json | jq -r '.metadata.vulnerabilities.high // 0')
+            CRITICAL_COUNT=$(cat audit-results.json | jq -r '.metadata.vulnerabilities.critical // 0')
+            echo "total-vulnerabilities=$VULN_COUNT" >> $GITHUB_OUTPUT
+            echo "high-vulnerabilities=$HIGH_COUNT" >> $GITHUB_OUTPUT
+            echo "critical-vulnerabilities=$CRITICAL_COUNT" >> $GITHUB_OUTPUT
+            echo "has-vulnerabilities=true" >> $GITHUB_OUTPUT
+          else
+            echo "has-vulnerabilities=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Generate upgrade plan
+        id: upgrade-plan
+        if: steps.check-vulns.outputs.has-vulnerabilities == 'true'
+        run: |
+          echo "Generating upgrade recommendations..."
+          npm outdated --json > outdated.json || true
+          
+          # Create upgrade plan
+          cat > upgrade-plan.md << 'EOL'
+          # Dependency Upgrade Plan
+          
+          ## Security Audit Summary
+          - **Total Vulnerabilities:** ${{ steps.check-vulns.outputs.total-vulnerabilities }}
+          - **Critical:** ${{ steps.check-vulns.outputs.critical-vulnerabilities }}
+          - **High:** ${{ steps.check-vulns.outputs.high-vulnerabilities }}
+          
+          ## Recommended Actions
+          
+          ### Immediate Actions (Critical/High Severity)
+          ```bash
+          # Run audit fix for automatic fixes
+          npm audit fix
+          
+          # For manual review of breaking changes
+          npm audit fix --dry-run
+          ```
+          
+          ### Package Updates Available
+          EOL
+          
+          if [ -s outdated.json ]; then
+            echo "\n#### Outdated Packages" >> upgrade-plan.md
+            echo "\`\`\`" >> upgrade-plan.md
+            npm outdated >> upgrade-plan.md || true
+            echo "\`\`\`" >> upgrade-plan.md
+            echo "" >> upgrade-plan.md
+            echo "To update packages:" >> upgrade-plan.md
+            echo "\`\`\`bash" >> upgrade-plan.md
+            echo "npm update" >> upgrade-plan.md
+            echo "# Or for major version updates:" >> upgrade-plan.md
+            echo "npx npm-check-updates -u && npm install" >> upgrade-plan.md
+            echo "\`\`\`" >> upgrade-plan.md
+          fi
+          
+          cat >> upgrade-plan.md << 'EOL'
+          
+          ### Testing Checklist
+          - [ ] Run `npm test` after applying fixes
+          - [ ] Verify application functionality
+          - [ ] Check for breaking changes in updated packages
+          - [ ] Review CHANGELOG.md files for updated packages
+          
+          ### Full Audit Details
+          \`\`\`
+          EOL
+          cat audit-summary.txt >> upgrade-plan.md
+          echo "\`\`\`" >> upgrade-plan.md
+          
+          echo "upgrade-plan-content<<EOF" >> $GITHUB_OUTPUT
+          cat upgrade-plan.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+      - name: Create or update security issue
+        if: steps.check-vulns.outputs.has-vulnerabilities == 'true'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const title = `Security Audit: ${context.payload.repository.name} - ${new Date().toISOString().split('T')[0]}`;
+            const body = `${{ steps.upgrade-plan.outputs.upgrade-plan-content }}`;
+            
+            // Check if there's already an open security audit issue
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'security,dependencies'
+            });
+            
+            const existingIssue = issues.data.find(issue => 
+              issue.title.includes('Security Audit') && 
+              issue.labels.some(label => label.name === 'security')
+            );
+            
+            if (existingIssue) {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                title: title,
+                body: body
+              });
+              console.log(`Updated existing security issue #${existingIssue.number}`);
+            } else {
+              // Create new issue
+              const issue = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['security', 'dependencies', 'priority-high']
+              });
+              console.log(`Created new security issue #${issue.data.number}`);
+            }
+            
+      - name: Upload audit artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-results
+          path: |
+            audit-results.json
+            audit-summary.txt
+            outdated.json
+            upgrade-plan.md
+          retention-days: 30
+          
+      - name: Fail on critical vulnerabilities
+        if: steps.check-vulns.outputs.critical-vulnerabilities > 0
+        run: |
+          echo "❌ Critical vulnerabilities found: ${{ steps.check-vulns.outputs.critical-vulnerabilities }}"
+          echo "Please review the created issue and apply security fixes immediately."
+          exit 1
