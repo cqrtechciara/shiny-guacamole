@@ -1,0 +1,156 @@
+name: Accessibility Audit
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+jobs:
+  accessibility-audit:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: |
+        npm install -g @axe-core/cli
+        npm install -g pa11y
+        npm install -g puppeteer
+    
+    - name: Install project dependencies
+      run: npm install
+      continue-on-error: true
+    
+    - name: Build project (if applicable)
+      run: |
+        if [ -f "package.json" ] && grep -q '"build"' package.json; then
+          npm run build
+        fi
+      continue-on-error: true
+    
+    - name: Start local server
+      run: |
+        if [ -f "package.json" ] && grep -q '"start"' package.json; then
+          npm start &
+          sleep 10
+        elif [ -f "index.html" ]; then
+          python3 -m http.server 8000 &
+          sleep 5
+        fi
+      continue-on-error: true
+    
+    - name: Run axe accessibility tests
+      run: |
+        mkdir -p reports
+        
+        # Test common pages if they exist
+        PAGES=("http://localhost:8000" "http://localhost:8000/index.html")
+        
+        for page in "${PAGES[@]}"; do
+          if curl -f -s "$page" > /dev/null 2>&1; then
+            echo "Testing $page with axe-core..."
+            axe "$page" --reporter json --output "reports/axe-$(basename $page .html).json" || true
+            axe "$page" --reporter spec --output "reports/axe-$(basename $page .html).txt" || true
+          fi
+        done
+        
+        # Also test static HTML files directly
+        find . -name "*.html" -not -path "./node_modules/*" -not -path "./dist/*" | head -5 | while read -r file; do
+          echo "Testing $file with axe-core..."
+          axe "file://$(pwd)/$file" --reporter json --output "reports/axe-$(basename $file .html).json" || true
+        done
+      continue-on-error: true
+    
+    - name: Run pa11y accessibility tests with color contrast
+      run: |
+        # Test with pa11y for additional coverage including color contrast
+        PAGES=("http://localhost:8000" "http://localhost:8000/index.html")
+        
+        for page in "${PAGES[@]}"; do
+          if curl -f -s "$page" > /dev/null 2>&1; then
+            echo "Testing $page with pa11y..."
+            pa11y "$page" --reporter json > "reports/pa11y-$(basename $page .html).json" || true
+            pa11y "$page" --reporter cli > "reports/pa11y-$(basename $page .html).txt" || true
+          fi
+        done
+        
+        # Test static files
+        find . -name "*.html" -not -path "./node_modules/*" -not -path "./dist/*" | head -5 | while read -r file; do
+          echo "Testing $file with pa11y..."
+          pa11y "file://$(pwd)/$file" --reporter json > "reports/pa11y-$(basename $file .html).json" || true
+        done
+      continue-on-error: true
+    
+    - name: Create accessibility summary
+      run: |
+        echo "# Accessibility Audit Summary" > reports/accessibility-summary.md
+        echo "Generated on: $(date)" >> reports/accessibility-summary.md
+        echo "" >> reports/accessibility-summary.md
+        
+        echo "## Files Tested" >> reports/accessibility-summary.md
+        ls -la reports/*.json | wc -l >> reports/accessibility-summary.md
+        echo "" >> reports/accessibility-summary.md
+        
+        echo "## Issues Found" >> reports/accessibility-summary.md
+        
+        # Count axe violations
+        if ls reports/axe-*.json >/dev/null 2>&1; then
+          echo "### Axe-core Results" >> reports/accessibility-summary.md
+          for file in reports/axe-*.json; do
+            violations=$(jq '.violations | length' "$file" 2>/dev/null || echo "0")
+            echo "- $(basename $file): $violations violations" >> reports/accessibility-summary.md
+          done
+          echo "" >> reports/accessibility-summary.md
+        fi
+        
+        # Count pa11y issues
+        if ls reports/pa11y-*.json >/dev/null 2>&1; then
+          echo "### Pa11y Results" >> reports/accessibility-summary.md
+          for file in reports/pa11y-*.json; do
+            issues=$(jq '. | length' "$file" 2>/dev/null || echo "0")
+            echo "- $(basename $file): $issues issues" >> reports/accessibility-summary.md
+          done
+        fi
+    
+    - name: Upload accessibility reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: accessibility-reports
+        path: reports/
+      if: always()
+    
+    - name: Comment on PR with results
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const fs = require('fs');
+          const path = require('path');
+          
+          try {
+            const summaryPath = 'reports/accessibility-summary.md';
+            if (fs.existsSync(summaryPath)) {
+              const summary = fs.readFileSync(summaryPath, 'utf8');
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `## 🔍 Accessibility Audit Results\n\n${summary}\n\n📊 Detailed reports are available in the workflow artifacts.`
+              });
+            }
+          } catch (error) {
+            console.error('Error posting comment:', error);
+          }
