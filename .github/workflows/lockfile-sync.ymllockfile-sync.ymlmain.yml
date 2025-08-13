@@ -1,0 +1,50 @@
+name: Lockfile Sync
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync-lockfile:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Create/Switch to fix/lockfile-sync branch  
+      run: |
+        git checkout -b fix/lockfile-sync || git checkout fix/lockfile-sync
+        git push -u origin fix/lockfile-sync || true
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies and regenerate lockfile
+      run: |
+        rm -f package-lock.json
+        npm install
+    
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+    
+    - name: Commit lockfile changes
+      run: |
+        git add package-lock.json
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Regenerate package-lock.json"
+          git push origin fix/lockfile-sync
+          echo "Lockfile updated and committed"
+        fi
