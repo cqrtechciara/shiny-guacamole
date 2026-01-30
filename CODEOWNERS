@@ -1,0 +1,28 @@
+# This file defines who are the code owners for this repository
+# Code owners will be automatically requested for review when someone opens a pull request that modifies code that they own.
+
+# Global code owners
+* @cqrtechciara
+
+# Specific file patterns
+package.json @cqrtechciara
+package-lock.json @cqrtechciara
+tsconfig.json @cqrtechciara
+next.config.ts @cqrtechciara
+tailwind.config.ts @cqrtechciara
+
+# Supabase related files
+supabase/ @cqrtechciara
+lib/supabase/ @cqrtechciara
+
+# GitHub workflows
+.github/ @cqrtechciara
+
+# Documentation
+README.md @cqrtechciara
+CONTRIBUTING.md @cqrtechciara
+
+# Configuration files
+.gitignore @cqrtechciara
+.nvmrc @cqrtechciara
+middleware.ts @cqrtechciara
