@@ -1,4 +1,5 @@
 # Shiny Guacamole
+
 A responsive mobile-enhanced website built with Next.js and Supabase integration for the c.qr tech pilot project.
 
 ## 🚀 Quick Development Setup
@@ -225,4 +226,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-c.qr tech pilot project - A responsive mobile-enhanced website built with ❤️ using Next.js and Supabase
+**c.qr tech pilot project** - A responsive mobile-enhanced website built with ❤️ using Next.js and Supabase
