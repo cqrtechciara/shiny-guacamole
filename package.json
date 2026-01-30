@@ -6,7 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "audit": "npm audit",
+    "audit:fix": "npm audit fix",
+    "audit:report": "npm audit --json > audit-report.json && npm audit --audit-level=moderate",
+    "audit:high": "npm audit --audit-level=high",
+    "audit:critical": "npm audit --audit-level=critical",
+    "security:check": "npm audit && npm outdated",
+    "security:fix": "npm audit fix --force",
+    "security:update": "npm update",
+    "deps:check": "npm outdated",
+    "deps:update": "npm update",
+    "deps:upgrade": "npx npm-check-updates -u",
+    "vulnerability:scan": "npm audit --json | jq '.vulnerabilities'",
+    "security:full": "npm audit && npm outdated && echo 'Security scan completed. Check audit-report.json for details.'"
   },
   "dependencies": {
     "react": "^18",
